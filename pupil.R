@@ -16,13 +16,13 @@ for (f in file_list){
   # filter_by_eventSource(myfile)
   f_data <- data[grep("ET", data$EventSource),]
   print("data filtered by eventSource")
-  ex_data <- f_data[,c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
+  ex_data <- f_data[,c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration")]
   print("Extracting Constructs")
   el_data <- ex_data[(ex_data$PupilLeft != -1.000) & (ex_data$PupilRight != -1.000),]
   el_data$StimulusName<-factor(el_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult","Posttest","WMC"))
   print("REmoving negative values")
   
-  avg<-aggregate(el_data[,4:5],list(StimulusName=el_data$StimulusName),mean)
+  avg<-aggregate(el_data[,4:6],list(StimulusName=el_data$StimulusName),mean,na.rm=TRUE)
   avg$mean=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
   avg[2:3]=list(NULL)
   x<-melt(avg)

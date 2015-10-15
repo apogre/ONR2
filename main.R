@@ -21,7 +21,7 @@ ONR_raw$MediaTime<-NULL #If video, there is a separate timesignal from the media
 ONR_raw[7:10]<-list(NULL) #Gaze Co-ordinates
 
 #Pupil size Analysis
-pupil_data_74_1 <- ONR_raw_74_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
+pupil_data_74_1 <- ONR_raw_74_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration")]
 pupil_data_61_0 <- ONR_raw_61_0[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
 pupil_data_70_1 <- ONR_raw_70_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
 pupil_data_63_0 <- ONR_raw_63_0[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
@@ -75,7 +75,9 @@ boxplot(data=pupil_data3,PupilLeft~StimulusName)
 boxplot(data=pupil_data3_0,PupilLeft~StimulusName)
 
 
-b<-ggplot(data=pupil_data3, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data3$StimulusName))+ theme(legend.position="none")
-c<-ggplot(data=pupil_data3_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data3_0$StimulusName))+ theme(legend.position="none")
+b<-ggplot(data=pupil_data_74_1, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_74_1$StimulusName))+ theme(legend.position="none")
+c<-ggplot(data=pupil_data_61_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_61_0$StimulusName))+ theme(legend.position="none")
+d<-ggplot(data=pupil_data_70_1, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_70_1$StimulusName))+ theme(legend.position="none")
+e<-ggplot(data=pupil_data_63_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_63_0$StimulusName))+ theme(legend.position="none")
 
-grid.arrange(b,c,ncol=2)
+grid.arrange(c,e,ncol=2)

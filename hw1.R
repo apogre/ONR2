@@ -8,7 +8,7 @@ file_list = list.files("ONR_S2_V5")
 
 for (f in file_list){
   print(f)
-  myfile = paste("ONR_S2_V5/",f,sep="")
+  myfile = paste("ONR_S2_V4/",f,sep="")
   data = read.csv(file=myfile, header=TRUE, fill=TRUE, sep = "\t", skip=5)
   print("data read")
   # filter_by_eventSource(myfile)
