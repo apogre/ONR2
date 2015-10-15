@@ -9,6 +9,7 @@ ONR_raw_74_1 = read.table("./raw-data/ONR@/ONR_S2_V4/Dump014_N074.txt", sep="\t"
 ONR_raw_61_0 = read.table("./raw-data/ONR@/ONR_S2_V4/Dump005_N061.txt", sep="\t", header=TRUE, skip=6, fill=TRUE)
 ONR_raw_70_1 = read.table("./raw-data/ONR@/ONR_S2_V4/Dump013_N070.txt", sep="\t", header=TRUE, skip=6, fill=TRUE)
 ONR_raw_63_0 = read.table("./raw-data/ONR@/ONR_S2_V4/Dump007_N063.txt", sep="\t", header=TRUE, skip=6, fill=TRUE)
+ONR_raw = read.table("./ONR_S2_V5/Dump001_N096.txt", sep="\t", header=TRUE, fill=TRUE)
 
 
 ONR_raw$StudyName <- NULL
@@ -21,7 +22,7 @@ ONR_raw$MediaTime<-NULL #If video, there is a separate timesignal from the media
 ONR_raw[7:10]<-list(NULL) #Gaze Co-ordinates
 
 #Pupil size Analysis
-pupil_data_74_1 <- ONR_raw_74_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration")]
+pupil_data_74_1 <- ONR_raw_74_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
 pupil_data_61_0 <- ONR_raw_61_0[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
 pupil_data_70_1 <- ONR_raw_70_1[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
 pupil_data_63_0 <- ONR_raw_63_0[c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight")]
@@ -75,9 +76,7 @@ boxplot(data=pupil_data3,PupilLeft~StimulusName)
 boxplot(data=pupil_data3_0,PupilLeft~StimulusName)
 
 
-b<-ggplot(data=pupil_data_74_1, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_74_1$StimulusName))+ theme(legend.position="none")
-c<-ggplot(data=pupil_data_61_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_61_0$StimulusName))+ theme(legend.position="none")
-d<-ggplot(data=pupil_data_70_1, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_70_1$StimulusName))+ theme(legend.position="none")
-e<-ggplot(data=pupil_data_63_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data_63_0$StimulusName))+ theme(legend.position="none")
+b<-ggplot(data=pupil_data3, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data3$StimulusName))+ theme(legend.position="none")
+c<-ggplot(data=pupil_data3_0, aes(x=StimulusName,y=PupilLeft))+geom_boxplot(aes(fill=pupil_data3_0$StimulusName))+ theme(legend.position="none")
 
-grid.arrange(c,e,ncol=2)
+grid.arrange(b,c,ncol=2)

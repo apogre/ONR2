@@ -11,25 +11,36 @@ count=0
 for (f in file_list){
   print(f)
   myfile = paste("ONR_S2/",f,sep="")
-  data = read.csv(file=myfile, header=TRUE, fill=TRUE, sep = "\t", skip=5)
+  data = read.csv(file=myfile, header=TRUE, fill=TRUE, sep = "\t")
   print("data read")
   # filter_by_eventSource(myfile)
-  f_data <- data[grep("ET", data$EventSource),]
+  # f_data <- data[grep("ET", data$EventSource),]
   print("data filtered by eventSource")
-  ex_data <- f_data[,c("StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration")]
+  
+  ex_data <- ONR_raw[,c("Age","Gender","StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
+  
   print("Extracting Constructs")
-  el_data <- ex_data[(ex_data$PupilLeft != -1.000) & (ex_data$PupilRight != -1.000),]
-  el_data$StimulusName<-factor(el_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult","Posttest","WMC"))
+  ex_data$PupilLeft[ex_data$PupilLeft == -1.000]<-NA
+  ex_data$PupilRight[ex_data$PupilRight == -1.000]<-NA
+  ex_data$WorkloadAverage[ex_data$WorkloadAverage == -99999.00]<-NA
+  # el_data <- ex_data[(ex_data$PupilLeft != -1.000) & (ex_data$PupilRight != -1.000),]
+  # (ex_data$WorkloadAverage!=-99999.00)
+  ex_data$StimulusName<-factor(ex_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult","Posttest","WMC"))
   print("REmoving negative values")
   
-  avg<-aggregate(el_data[,4:6],list(StimulusName=el_data$StimulusName),mean,na.rm=TRUE)
-  avg$mean=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
+  avg<-aggregate(el_data[,6:13],list(StimulusName=el_data$StimulusName),mean,na.rm=TRUE)
+  avg$pupil=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
   avg[2:3]=list(NULL)
+  avg$Age<-ex_data$Age[1]
+  avg$Gender<-ex_data$Gender[1]
+  f<-"Dump001_N096.txt"
   x<-melt(avg)
   id<-sapply(strsplit(as.character(f), split = "[_.]"), "[", 2)
 
   if(count==0){
     existingDF<-dcast(x,id~StimulusName+variable)
+    existingDF$Age<-ex_data$Age[1]
+    existingDF$Gender<-ex_data$Gender[1]
   }
   else{
     newDF <- dcast(x,id~StimulusName+variable)
