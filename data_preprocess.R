@@ -4,7 +4,7 @@ library(plyr)
 getwd()
 setwd("C:/Users/apradha7/Desktop/ONR2/raw-data")
 
-pas_fail<-read.csv(file="ONR_Pass_FAIL.tsv", header=TRUE, fill=TRUE, sep = "\t")
+
 
 file_list = list.files("./ONR_S2") #Get all the files from the folder
 count=0
@@ -36,20 +36,20 @@ for (f in file_list){
   
   x<-melt(avg)
   id<-sapply(strsplit(as.character(f), split = "[_.]"), "[", 2)
-  get_row<-pas_fail[pas_fail$id==as.character(id),]
+  # get_row<-pas_fail[pas_fail$id==as.character(id),]
   
   if(count==0){
     existingDF<-dcast(x,id~StimulusName+variable)
     existingDF$Age<-ex_data$Age[1]
     existingDF$Gender<-ex_data$Gender[1]
-    existingDF$Difficult_Status<-get_row$L2.Difficult
+    # existingDF$Difficult_Status<-get_row$L2.Difficult
   }
   else{
     newDF <- dcast(x,id~StimulusName+variable)
     newDF$Age<-ex_data$Age[1]
     newDF$Gender<-ex_data$Gender[1]
     DF <- rbind.fill(existingDF,newDF)
-    DF$Difficult_Status<-get_row$L2.Difficult
+    # DF$Difficult_Status<-get_row$L2.Difficult
     existingDF=DF
   }
   count = count+1
@@ -59,3 +59,22 @@ for (f in file_list){
 newfile = paste("ONR_S2_Pre/",f,sep="")
 write.table(existingDF, file=newfile,row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
 print("data written in csv")
+
+#Merging the sensor data with output data.
+pas_fail<-read.csv(file="ONR_Pass_FAIL.tsv", header=TRUE, fill=TRUE, sep = "\t")
+final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
+
+
+  finalID <-final[1]
+  for(id in 1:length(finalID[[1]])){
+    id_1= as.character(finalID[[1]][id])
+    print(id_1[[1]])
+    p_row <-pas_fail[pas_fail$id==id_1,]
+    print(p_row$L2.Difficult)
+    final$output[id]<-p_row$L2.Difficult
+  }
+  
+  write.table(final, file='newfile.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
+  print("data written in csv")
+
+
