@@ -1,5 +1,9 @@
+install.packages('e1071', dependencies = TRUE)
+
 library(reshape2)
 library(plyr)
+library(e1071)
+library(ggplot2)
 
 getwd()
 setwd("C:/Users/apradha7/Desktop/ONR2/raw-data")
@@ -76,5 +80,23 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   
   write.table(final, file='newfile.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
   print("data written in csv")
+  
 
+  #SVM implementation
+  final_data<-read.table("newfile.txt",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  final_data$Gender = as.character(final_data$Gender)
+  final_data$Gender[as.character(final_data$Gender) == "MALE"] <- "1"
+  final_data$Gender[as.character(final_data$Gender) == "FEMALE"] <- "0"
+  final_data$Age[final_data$Age < 20] <- 0
+  final_data$Age[final_data$Age >= 20] <- 1
+  
+  data <- final_data[c(-1)]
+  model <- svm(output~.,data=data)
+  data$output <-as.factor(data$output)
+  data$Age <-as.factor(data$Age)
+  data$Gender <-as.factor(data$Gender)  
+#Plots
+#   gender = count(final_data, c('Gender','output'))
+#   ggplot(gender, aes(x=gender$Gender, fill=gender$output)) 
+#     +geom_histogram()
 
