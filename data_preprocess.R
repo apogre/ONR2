@@ -1,12 +1,14 @@
-install.packages('e1071', dependencies = TRUE)
+install.packages('e1071', dependencies = FALSE)
+install.packages('caret', dependencies = TRUE)
 
 library(reshape2)
 library(plyr)
 library(e1071)
 library(ggplot2)
+library(caret)
 
 getwd()
-setwd("C:/Users/apradha7/Desktop/ONR2/raw-data")
+setwd("C:/Users/apradha7/Downloads/Lab/ONR2/raw-data")
 
 
 
@@ -78,7 +80,7 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
     final$output[id]<-p_row$L2.Difficult
   }
   
-  write.table(final, file='newfile.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
+  write.table(data, file='data.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
   print("data written in csv")
   
 
@@ -90,13 +92,52 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   final_data$Age[final_data$Age < 20] <- 0
   final_data$Age[final_data$Age >= 20] <- 1
   
-  data <- final_data[c(-1)]
-  model <- svm(output~.,data=data)
-  data$output <-as.factor(data$output)
-  data$Age <-as.factor(data$Age)
-  data$Gender <-as.factor(data$Gender)  
-#Plots
-#   gender = count(final_data, c('Gender','output'))
-#   ggplot(gender, aes(x=gender$Gender, fill=gender$output)) 
-#     +geom_histogram()
-
+  #Removing id
+  mydata <- final_data[c(-1)]
+  
+  
+  #Removing NA's
+  mydata<-mydata[complete.cases(mydata),]
+  
+  mydata$output <-factor(mydata$output)
+  mydata$Age <-factor(mydata$Age)
+  mydata$Gender <-factor(mydata$Gender) 
+  
+  # mydata[29:42] <- list(NULL) 
+  
+#   model <- svm(output~.,data=mydata)
+#   print(model)
+#   summary(model)
+#   
+  
+  #Creating Train and Test set
+  index <- 1:nrow(mydata)
+  set.seed(42)
+  testindex <- sample(index, trunc(length(index)/3))
+  testset <- mydata[testindex,]
+  trainset <- mydata[-testindex,]
+  
+  tuned <- tune.svm(output~., data = trainset, gamma = 10^(-6:-1), cost = 10^(1:2))
+  summary(tuned)
+  
+  bestGamma <- tuned$best.parameters[[1]]
+  bestC <- tuned$best.parameters[[2]]
+  best_model <- svm(output ~ .,kernal="radial", cross=10,data = trainset,cost = bestC, gamma = bestGamma)
+  summary(best_model)
+  
+  #Using the model to predict on tesset
+  prediction <- predict(best_model, testset[,-ncol(mydata)])
+  tab <- table(pred = prediction, true = testset[,ncol(mydata)])
+  tab
+  
+  classAgreement(tab)
+  
+  #Creating SVM model from trainset
+  model <- svm(output~.,data=trainset)
+  print(model)
+  summary(model)
+  
+  
+  
+  
+  
