@@ -129,12 +129,12 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   testset <- mydata[testindex,]
   trainset <- mydata[-testindex,]
   
-  tuned <- tune.svm(output~., data = trainset, gamma = 10^(-6:-1), cost = 10^(1:2))
+  tuned <- tune.svm(output~., data = mydata, gamma = 10^(-6:-1), cost = 10^(1:2))
   summary(tuned)
   
   bestGamma <- tuned$best.parameters[[1]]
   bestC <- tuned$best.parameters[[2]]
-  best_model <- svm(output ~ .,kernal="radial",cross=10,data = trainset,cost = bestC, gamma = bestGamma)
+  best_model <- svm(output ~ .,kernal="radial",cross=10,data = mydata,cost = bestC, gamma = bestGamma)
   summary(best_model)
   
   #Using the model to predict on tesset
@@ -164,10 +164,16 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   print(paste('Accuracy',1-misClasificError))
   
   #Random Forest
-  fit <- randomForest(output~.,data=mydata,importance=TRUE,proximity=TRUE)
-  fit
+  
+  bestmtry <- tuneRF(trainset[-ncol(mydata)],trainset$output, ntreeTry=100, 
+                     stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE, dobest=FALSE)
+  
+fit <-randomForest(output~.,data=trainset, mtry=4, ntree=1000, 
+                          keep.forest=TRUE, importance=TRUE)
+  fit <- randomForest(output~.,data=mydata,importance=TRUE,proximity=TRUE,mtry=2,do.trace=100)
   varImpPlot(fit)
-  Prediction <- predict(fit, test)
+  round(importance(fit), 2)
+  Prediction <- predict(fit, testset)
   #Using the model to predict on tesset
   prediction <- predict(fit, testset[,-ncol(mydata)])
   tab <- table(pred = prediction, true = testset[,ncol(mydata)])
