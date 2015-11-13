@@ -6,9 +6,14 @@ library(plyr)
 library(e1071)
 library(ggplot2)
 library(caret)
+library(doSMP)
+library(AppliedPredictiveModeling)
+library(randomForest)
+
+transparentTheme(trans = .4)
 
 getwd()
-setwd("C:/Users/apradha7/Downloads/Lab/ONR2/raw-data")
+setwd("C:/Users/apradha7/Desktop/ONR2/raw-data")
 
 
 
@@ -103,7 +108,7 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   mydata$Age <-factor(mydata$Age)
   mydata$Gender <-factor(mydata$Gender) 
   
-  # mydata[29:42] <- list(NULL) 
+  mydata[29:44] <- list(NULL) 
   
 #   model <- svm(output~.,data=mydata)
 #   print(model)
@@ -112,8 +117,15 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   
   #Creating Train and Test set
   index <- 1:nrow(mydata)
-  set.seed(42)
+  set.seed(52)
   testindex <- sample(index, trunc(length(index)/3))
+  testset <- mydata[testindex,]
+  trainset <- mydata[-testindex,]
+  
+  set.seed(345)
+  testindex <- createDataPartition(mydata$output, p = .2,
+                                    list = FALSE,
+                                    times = 1)
   testset <- mydata[testindex,]
   trainset <- mydata[-testindex,]
   
@@ -122,7 +134,7 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   
   bestGamma <- tuned$best.parameters[[1]]
   bestC <- tuned$best.parameters[[2]]
-  best_model <- svm(output ~ .,kernal="radial", cross=10,data = trainset,cost = bestC, gamma = bestGamma)
+  best_model <- svm(output ~ .,kernal="radial",cross=10,data = trainset,cost = bestC, gamma = bestGamma)
   summary(best_model)
   
   #Using the model to predict on tesset
@@ -137,7 +149,71 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   print(model)
   summary(model)
   
+  #Logistic Regression
+  trainset <- mydata[1:43,]
+  testset <- mydata[44:53,]
+  
+  glm_model <- glm(output ~.,family = binomial,data=trainset)
+  summary(glm_model)
+  anova(glm_model, test="Chisq")
+  
+  fitted.results <- predict(glm_model,newdata=testset,type='response')
+  fitted.results <- ifelse(fitted.results > 0.5,1,0)
+  
+  misClasificError <- mean(fitted.results != testset$output)
+  print(paste('Accuracy',1-misClasificError))
+  
+  #Random Forest
+  fit <- randomForest(output~.,data=mydata,importance=TRUE,proximity=TRUE)
+  fit
+  varImpPlot(fit)
+  Prediction <- predict(fit, test)
+  #Using the model to predict on tesset
+  prediction <- predict(fit, testset[,-ncol(mydata)])
+  tab <- table(pred = prediction, true = testset[,ncol(mydata)])
+  tab
   
   
+  X <- trainset[,-ncol(mydata)]
+  Y <- trainset[,ncol(mydata)]
   
+  model<-train(as.data.frame(X),Y,method='lda')
+  
+  featurePlot(x = mydata[, 3:6],
+              y = mydata$output,
+              plot = "pairs",
+              ## Add a key at the top
+              auto.key = list(columns = 3))
+  
+  featurePlot(x = mydata[, 3:6],
+              y = mydata$output,
+              plot = "ellipse",
+              ## Add a key at the top
+              auto.key = list(columns = 3))
+  
+  transparentTheme(trans = .9)
+  featurePlot(x = mydata[, 1:6],
+              y = mydata$output,
+              plot = "density",
+              ## Pass in options to xyplot() to 
+              ## make it prettier
+              scales = list(x = list(relation="free"),
+                            y = list(relation="free")),
+              adjust = 1.5,
+              pch = "|",
+              layout = c(6, 1),
+              auto.key = list(columns = 3))
+  
+  
+  featurePlot(x = mydata[, 3:6],
+              y = mydata$output,
+              plot = "box",
+              ## Pass in options to bwplot() 
+              scales = list(y = list(relation="free"),
+                            x = list(rot = 90)),
+              layout = c(4,1 ),
+              auto.key = list(columns = 2))
+  
+  gbmImp <- varImp(mydata, scale = FALSE)
+  gbmImp
   
