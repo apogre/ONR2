@@ -10,10 +10,13 @@ library(doSMP)
 library(AppliedPredictiveModeling)
 library(randomForest)
 
+library(xlsx)
+write.xlsx(avg, "C:/Users/apradha7/Desktop/avg.xls") 
+
 transparentTheme(trans = .4)
 
 getwd()
-setwd("C:/Users/apradha7/Desktop/ONR2/raw-data")
+setwd("C:/Users/apradha7/Desktop/ONR2/onr_data")
 
 
 
@@ -22,14 +25,15 @@ count=0
 
 for (f in file_list){
   print(f)
+  f="Dump020_N042.txt"
   
   myfile = paste("ONR_S2/",f,sep="")
-  data = read.csv(file=myfile, header=TRUE, fill=TRUE,skip = 6, sep = "\t")
+  data = read.csv(file=myfile, header=TRUE, fill=TRUE,skip = 5, sep = "\t")
   print("data read")
-  if(ncol(data)<104){
-    print("columns less than required")
-    next
-  }
+#   if(ncol(data)<104){
+#     print("columns less than required")
+#     next
+#   }
   
   ex_data <- data[,c("Age","Gender","StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
   
@@ -39,6 +43,8 @@ for (f in file_list){
   
   
   ex_data$StimulusName<-factor(ex_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult","Posttest","WMC"))
+ 
+  # ex_data$StimulusName<-factor(ex_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult"))
   
   avg<-aggregate(ex_data[,6:13],list(StimulusName=ex_data$StimulusName),mean,na.rm=TRUE)
   avg$pupil=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
