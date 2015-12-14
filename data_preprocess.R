@@ -16,7 +16,7 @@ write.xlsx(avg, "C:/Users/apradha7/Desktop/avg.xls")
 transparentTheme(trans = .4)
 
 getwd()
-setwd("C:/Users/apradha7/Desktop/ONR2/onr_data")
+setwd("C:/Users/apradha7/Downloads/Lab/ONR2/onr_data")
 
 
 
@@ -25,15 +25,15 @@ count=0
 
 for (f in file_list){
   print(f)
-  f="Dump020_N042.txt"
+  # f="Dump008_N100.txt"
   
   myfile = paste("ONR_S2/",f,sep="")
   data = read.csv(file=myfile, header=TRUE, fill=TRUE,skip = 5, sep = "\t")
   print("data read")
-#   if(ncol(data)<104){
-#     print("columns less than required")
-#     next
-#   }
+  if(ncol(data)<104){
+    print("columns less than required")
+    next
+  }
   
   ex_data <- data[,c("Age","Gender","StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
   
@@ -50,7 +50,7 @@ for (f in file_list){
   avg$pupil=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
   avg[2:3]=list(NULL)
   avg <- avg[c("StimulusName","pupil","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
-  
+  avg
   x<-melt(avg)
   id<-sapply(strsplit(as.character(f), split = "[_.]"), "[", 2)
   # get_row<-pas_fail[pas_fail$id==as.character(id),]
@@ -96,7 +96,7 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   
 
   #SVM implementation
-  final_data<-read.table("newfile.txt",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  final_data<-read.table("revised_data.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
   final_data$Gender = as.character(final_data$Gender)
   final_data$Gender[as.character(final_data$Gender) == "MALE"] <- "1"
   final_data$Gender[as.character(final_data$Gender) == "FEMALE"] <- "0"
@@ -135,12 +135,12 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   testset <- mydata[testindex,]
   trainset <- mydata[-testindex,]
   
-  tuned <- tune.svm(output~., data = mydata, gamma = 10^(-6:-1), cost = 10^(1:2))
+  tuned <- tune.svm(Output~., data = mydata, gamma = 10^(-6:-1), cost = 10^(1:2))
   summary(tuned)
   
   bestGamma <- tuned$best.parameters[[1]]
   bestC <- tuned$best.parameters[[2]]
-  best_model <- svm(output ~ .,kernal="radial",cross=10,data = mydata,cost = bestC, gamma = bestGamma)
+  best_model <- svm(Output ~ .,kernal="radial",cross=10,data = mydata,cost = bestC, gamma = bestGamma)
   summary(best_model)
   
   #Using the model to predict on tesset
@@ -176,7 +176,7 @@ final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
   
 fit <-randomForest(output~.,data=trainset, mtry=4, ntree=1000, 
                           keep.forest=TRUE, importance=TRUE)
-  fit <- randomForest(output~.,data=mydata,importance=TRUE,proximity=TRUE,mtry=2,do.trace=100)
+  fit <- randomForest(Output~.,data=mydata,importance=TRUE,proximity=TRUE,mtry=2,do.trace=100)
   varImpPlot(fit)
   round(importance(fit), 2)
   Prediction <- predict(fit, testset)
@@ -228,4 +228,58 @@ fit <-randomForest(output~.,data=trainset, mtry=4, ntree=1000,
   
   gbmImp <- varImp(mydata, scale = FALSE)
   gbmImp
+  
+  final_data<-read.table("revised_data.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  
+  library(psych)
+  require(ggplot2)
+  describeBy(final_data,final_data$Output)
+  t.test(final_data$Difficult_HighEngagement~final_data$Output)
+  final_data$Output = as.factor(final_data$Output)
+  final_data$Gender_1_Male = as.factor(final_data$Gender_1_Male)
+  ggplot(final_data, aes(x=Output,y=Difficult_HighEngagement))+
+    geom_boxplot()
+  model1 = lm(Difficult_HighEngagement ~ Output, data = final_data)
+  summary(model1)
+  
+  summary(final_data)
+  sapply(final_data, sd)
+  
+  ##Normality test
+  shapiro.test(final_data$Difficult_HighEngagement)
+  qqnorm(final_data$Difficult_HighEngagement)
+  
+  xtabs(~Output+Gender_1_Male,data=final_data)
+  mylogit <- glm(Output ~ ., data = final_data[-1], family = "binomial")
+  summary(mylogit)
+ pairs(final_data[,3:4])
+ 
+ mydata=final_data[-1]
+ mydata$Gender_1_Male = as.factor(mydata$Gender_1_Male)
+ #Creating Train and Test set
+ index <- 1:nrow(mydata)
+ set.seed(52)
+ testindex <- sample(index, trunc(length(index)/3))
+ testset <- mydata[testindex,]
+ trainset <- mydata[-testindex,]
+ xtabs(~Output+Gender_1_Male,data=trainset)
+ 
+ #Random Forest
+ 
+ 
+ bestmtry <- tuneRF(trainset[-ncol(mydata)],trainset$Output, ntreeTry=100, 
+                    stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE, dobest=FALSE)
+ 
+ 
+ fit <-randomForest(Output~.,data=trainset, mtry=2, ntree=1000, 
+                    keep.forest=TRUE, importance=TRUE)
+ fit <- randomForest(output~.,data=mydata,importance=TRUE,proximity=TRUE,mtry=2,do.trace=100)
+ varImpPlot(fit)
+ round(importance(fit), 2)
+ Prediction <- predict(fit, testset)
+ #Using the model to predict on tesset
+ prediction <- predict(fit, testset[,-ncol(mydata)])
+ tab <- table(pred = prediction, true = testset[,ncol(mydata)])
+ tab
+ 
   
