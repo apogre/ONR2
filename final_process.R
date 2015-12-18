@@ -45,6 +45,7 @@ print(paste('Accuracy',1-misClasificError))
 
 #K-means Clustering
 df = scale(final_data[,3:7])
+df = final_data[,c("Easy1_HighEngagement","Difficult_HighEngagement")]
 
 wssplot <- function(data, nc=15, seed=1234){
   wss <- (nrow(data)-1)*sum(apply(data,2,var))
@@ -70,7 +71,7 @@ fit.km <- kmeans(df, 4, nstart=25)
 fit.km$size
 fit.km$centers
 aggregate(final_data[,3:7], by=list(cluster=fit.km$cluster), mean)
-ct.km <- table(final_data$Output, fit.km$cluster)
+ct.km <- table(final_data$output, fit.km$cluster)
 ct.km
 
 ##Random Forest

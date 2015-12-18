@@ -16,7 +16,7 @@ write.xlsx(avg, "C:/Users/apradha7/Desktop/avg.xls")
 transparentTheme(trans = .4)
 
 getwd()
-setwd("C:/Users/apradha7/Downloads/Lab/ONR2/onr_data")
+setwd("C:/Users/apradha7/Desktop/ONR2/onr_data")
 
 
 
@@ -78,25 +78,36 @@ write.table(existingDF, file=newfile,row.names = FALSE,sep = "," ,col.names=TRUE
 print("data written in csv")
 
 #Merging the sensor data with output data.
-pas_fail<-read.csv(file="ONR_Pass_FAIL.tsv", header=TRUE, fill=TRUE, sep = "\t")
+pas_fail<-read.csv(file="ONR/ONR_Pass_FAIL.tsv", header=TRUE, fill=TRUE, sep = "\t")
 final<-read.csv(file="final.txt", header=TRUE, fill=TRUE, sep = ",")
 
 
-  finalID <-final[1]
+  finalID <-final_data[1]
   for(id in 1:length(finalID[[1]])){
     id_1= as.character(finalID[[1]][id])
     print(id_1[[1]])
-    p_row <-pas_fail[pas_fail$id==id_1,]
-    print(p_row$L2.Difficult)
-    final$output[id]<-p_row$L2.Difficult
+    p_row <-demo_data[demo_data$ID==id_1,]
+    print(p_row$game_time)
+    p_row$game_time = as.character(p_row$game_time)
+    p_row$skill_level = as.character(p_row$skill_level)
+    if(length(p_row$game_time)>0){
+      final_data$game_time[id]<-p_row$game_time
+      final_data$skill_level[id]<-p_row$skill_level
+    }
+    else{
+      final_data$game_time[id]<-NA
+      final_data$skill_level[id]<-NA
+    }
   }
   
-  write.table(data, file='data.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
+  write.table(data, file='mydata2.txt',row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
   print("data written in csv")
   
 
   #SVM implementation
-  final_data<-read.table("revised_data.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  final_data<-read.table("ONR/Dump035_N094.txt",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  rev_data<-read.table("ONR/revised_data.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  
   final_data$Gender = as.character(final_data$Gender)
   final_data$Gender[as.character(final_data$Gender) == "MALE"] <- "1"
   final_data$Gender[as.character(final_data$Gender) == "FEMALE"] <- "0"
@@ -230,6 +241,8 @@ fit <-randomForest(output~.,data=trainset, mtry=4, ntree=1000,
   gbmImp
   
   final_data<-read.table("revised_data.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  demo_data<-read.table("ONR/Demographic.csv",header=TRUE,sep=",",fill =TRUE,quote="",comment.char = "",allowEscapes=TRUE,stringsAsFactors=TRUE)
+  
   
   library(psych)
   require(ggplot2)
@@ -282,4 +295,27 @@ fit <-randomForest(output~.,data=trainset, mtry=4, ntree=1000,
  tab <- table(pred = prediction, true = testset[,ncol(mydata)])
  tab
  
-  
+ 
+ ##Scatter PLOT
+ plot(f$Difficult_WorkloadAverage,f$Difficult_HighEngagement)
+ plot(s$Difficult_WorkloadAverage,s$Difficult_HighEngagement)
+ cor(final_data$Easy1_HighEngagement,final_data$Difficult_HighEngagement)
+ plot(f$Easy1_WorkloadAverage,f$Difficult_WorkloadAverage)
+ plot(f$Easy1_pupil,f$Difficult_pupil)
+ plot(f$Easy1_FixationDuration,f$Difficult_FixationDuration)
+ plot(s$Easy1_FixationDuration,s$Difficult_FixationDuration)
+ plot(f$Easy1_Drowsy,f$Difficult_Drowsy)
+ plot(s$Easy1_Drowsy,s$Difficult_Drowsy)
+ 
+ plot(s$Easy1_FixationDuration,s$Difficult_FixationDuration)
+ 
+ s <- subset(final_data, output == 1)
+ f <- subset(final_data, output == 0)
+ 
+ ns <- subset(final_data, skill_level == "Not skilled")
+ es <- subset(final_data, skill_level == "Extremely skilled")
+ ms <- subset(final_data, skill_level == "Moderately skilled")
+ 
+ na <-subset(final_data, game_time=="Not at all")
+ ed <-subset(final_data, game_time=="Every day") 
+ 

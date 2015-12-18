@@ -17,23 +17,28 @@ for (f in file_list){
   # f_data <- data[grep("ET", data$EventSource),]
   print("data filtered by eventSource")
   
-  ex_data <- ONR_raw[,c("Age","Gender","StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
+  ex_data <- data[,c("Age","Gender","StimulusName","EventSource","UTCTimestamp","PupilLeft","PupilRight","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
   
   print("Extracting Constructs")
+  
   ex_data$PupilLeft[ex_data$PupilLeft == -1.000]<-NA
   ex_data$PupilRight[ex_data$PupilRight == -1.000]<-NA
   ex_data$WorkloadAverage[ex_data$WorkloadAverage == -99999.00]<-NA
+  
   # el_data <- ex_data[(ex_data$PupilLeft != -1.000) & (ex_data$PupilRight != -1.000),]
   # (ex_data$WorkloadAverage!=-99999.00)
+  
   ex_data$StimulusName<-factor(ex_data$StimulusName,c("Easy1","Easy2","Moderate","Difficult","Posttest","WMC"))
   print("REmoving negative values")
   
-  avg<-aggregate(el_data[,6:13],list(StimulusName=el_data$StimulusName),mean,na.rm=TRUE)
+  avg<-aggregate(ex_data[,6:13],list(StimulusName=ex_data$StimulusName),mean,na.rm=TRUE)
   avg$pupil=rowMeans(avg[,c("PupilLeft", "PupilRight")], na.rm=TRUE)
   avg[2:3]=list(NULL)
-  avg$Age<-ex_data$Age[1]
-  avg$Gender<-ex_data$Gender[1]
-  f<-"Dump001_N096.txt"
+  avg <- avg[c("StimulusName","pupil","FixationDuration","HighEngagement","LowEngagement","Distraction","Drowsy","WorkloadAverage")]
+#   
+#   avg$Age<-ex_data$Age[1]
+#   avg$Gender<-ex_data$Gender[1]
+  f<-"Dump001_N0.txt"
   x<-melt(avg)
   id<-sapply(strsplit(as.character(f), split = "[_.]"), "[", 2)
 
@@ -56,5 +61,6 @@ for (f in file_list){
 }
 
 newfile = paste("ONR_S2_EX/",f,sep="")
+newfile<-"data"
 write.table(existingDF, file=newfile,row.names = FALSE,sep = "," ,col.names=TRUE, quote= FALSE)
 print("data written in csv")
